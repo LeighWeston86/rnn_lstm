@@ -1,2 +1,4 @@
 .idea/*
 *__pycache__/*
+rnn_lstm/__pycache__/
+rnn_lstm/model/__pycache__/
