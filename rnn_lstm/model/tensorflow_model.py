@@ -1,3 +1,4 @@
+import math
 import tensorflow as tf
 import numpy as np
 
@@ -5,11 +6,11 @@ class TfLSTM(object):
 
     def __init__(self, vocab_size,
                  num_classes,
-                 learning_rate = 0.01,
-                 lstm_size=200,
+                 learning_rate=0.01,
+                 lstm_size=100,
                  sequence_length=500,
-                 embedding_size=100,
-                 dropout=0.0):
+                 embedding_size=32,
+                 dropout=0.4):
 
         """
         An LSTM for text classification.
@@ -47,7 +48,7 @@ class TfLSTM(object):
         """
         self.X = tf.placeholder(shape=[None, self.sequence_length],
                                 dtype=tf.int32, name="X")
-        self.y = tf.placeholder(shape=[None, 2], dtype=tf.int32, name="y")
+        self.y = tf.placeholder(shape=[None, 1], dtype=tf.float32, name="y")
         self.keep_prob = tf.placeholder(shape=[], dtype=tf.float32, name="keep_prob")
 
     def _add_embeddings_op(self):
@@ -79,10 +80,18 @@ class TfLSTM(object):
         Defines the cost function using softmax cross entropy and the Adam optimizer;
         defines self.cost, self.optimizer.
         """
-        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=self.y))
+        self.cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.logits, labels=self.y))
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
 
-    def fit(self, batches, num_epochs=30, verbose=True):
+    @staticmethod
+    def _get_batches(X, y, batch_size):
+        num_batches = math.ceil(X.shape[0] / batch_size)
+        dataset = tf.data.Dataset.from_tensor_slices((X, y))
+        dataset = dataset.batch(num_batches)
+        iterator = dataset.make_one_shot_iterator()
+        return iterator, num_batches
+
+    def fit(self, X, y, batch_size=256, num_epochs=10, verbose=True):
         """
         Fit the model.
 
@@ -98,12 +107,16 @@ class TfLSTM(object):
         # Begin training
         for epoch in range(num_epochs):
 
+            # New epoch
+            iterator, num_batches = self._get_batches(X, y, batch_size)
+            next_batch = iterator.get_next()
             epoch_loss = 0
-            num_batches = len(batches)
-            for x_batch, y_batch in batches:
+            for batch in range(int(num_batches)):
+
+                X_batch, y_batch = self.sess.run(next_batch)
 
                 feed_dict = {
-                    self.X: x_batch,
+                    self.X: X_batch,
                     self.y: y_batch,
                     self.keep_prob: 1 - self.dropout
                 }
@@ -121,32 +134,7 @@ class TfLSTM(object):
         :return: array; the predicted labels
         """
 
-        predicted = tf.nn.softmax(self.logits)
+        predicted = tf.nn.sigmoid(self.logits)
         pred = self.sess.run(predicted, feed_dict={self.X: X_test, self.keep_prob: 1})
-        pred = np.argmax(pred, axis=1)
+        pred = np.where(pred > 0.5, 1, 0)
         return pred
-
-if __name__ == "__main__":
-    from rnn_lstm.model.data_utils import get_data, get_minibatches
-    from sklearn.metrics import f1_score
-    X_train, X_test, y_train, y_test = get_data(10000)
-    batches = get_minibatches(X_train, y_train)
-    l_rates = []
-    train_scores = []
-    test_scores = []
-    for lr in [3.727593720314938e-05]:
-        lstm = TfLSTM(10000, 2, learning_rate=lr)
-        lstm.fit(batches)
-        preds = lstm.predict(X_test)
-        train_preds = lstm.predict(X_train)
-        train_f1 = f1_score(train_preds, y_train)
-        test_f1 = f1_score(preds, y_test)
-        print("Test f1: {}".format(train_f1))
-        print("Test f1: {}".format(test_f1))
-        l_rates.append(lr)
-        train_scores.append(train_f1)
-        test_scores.append(test_f1)
-        tf.reset_default_graph()
-
-    for lr_, tr_f, te_f in zip(l_rates, train_scores, test_scores):
-        print(lr_, tr_f, te_f)

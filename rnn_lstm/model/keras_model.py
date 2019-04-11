@@ -1,3 +1,4 @@
+import numpy as np
 from keras.layers import Dense, LSTM
 from keras.layers.embeddings import Embedding
 from keras.models import Input, Model
@@ -48,7 +49,7 @@ class KerasLSTM(object):
 
         return model
 
-    def fit(self, X_train, y_train, learning_rate=0.01, n_epochs=3):
+    def fit(self, X_train, y_train, learning_rate=0.01, n_epochs=10):
         """
         Fits the model to the data.
 
@@ -72,27 +73,3 @@ class KerasLSTM(object):
         """
 
         return np.where(self.model.predict(X_test) > 0.5, 1, 0)
-
-
-if __name__ == "__main__":
-    from sklearn.metrics import f1_score
-    from rnn_lstm.model.data_utils import get_data
-    import numpy as np
-    X_train, X_test, y_train, y_test = get_data()
-    print(X_train.shape)
-    print(y_train.shape)
-    lstm = KerasLSTM()
-    lstm.fit(X_train, y_train)
-    train_predicted = np.where(lstm.predict(X_train) > 0.5, 1, 0)
-    test_predicted = np.where(lstm.predict(X_test) > 0.5, 1, 0)
-    print('Train set f1: {}'.format(f1_score(train_predicted, y_train)))
-    print('Test set f1: {}'.format(f1_score(test_predicted, y_test)))
-
-
-
-
-
-
-
-
-

@@ -1,22 +1,18 @@
 # rnn_lstm
 
-LSTM models for binary text classification in tensorflow and keras.
+LSTM models for binary text classification in tensorflow and keras. The models have a simple and high-level interface for training and assessment.
 
 
 ### Usage
 
 ##### Data
 
-The imdb dataset can be downloaded and formatted using rnn_lstm.utils.data_utils.get_data()
+The imdb dataset can be downloaded and formatted using the rnn_lstm.utils.data_utils.get_data function (set y_as_column=True for tensorflow model).
 
 ```python
-from rnn_lstm.model.data_utils import get_data, get_minibatches
-X_train, X_dev, y_train, y_dev = get_data()
-
-# For the tensorflow model, preprocess into batches
-batches = get_minibatches(X_train, y_train)
+from rnn_lstm.model.data_utils import get_data
+X_train, X_test, y_train, y_test = get_data()
 ```
-
 ##### Training
 
 The models can be fit as follows:
@@ -26,22 +22,22 @@ The models can be fit as follows:
 from rnn_lstm.model.keras_model import KerasLSTM
 lstm = KerasLSTM()
 lstm.fit(X_train, y_train)
+ 
 
 # Tensorflow model
 from rnn_lstm.model.tensorflow_model import TfLSTM
-lstm = TfLSTM(TfLSTM(5000, 2))
-lstm.fit(batches)
+lstm = TfLSTM(TfLSTM(5000, 1))
+lstm.fit(X_train, y_train)
 ```
 
-##### Assessment
+##### Prediction and assessment
 
 The models can be assessed in the following way:
 
 ```python
-from sklearn.metrics import f1_score
-train_predicted = lstm.predict(X_train)
-test_predicted = lstm.predict(X_dev)
-print('Train set f1: {}'.format(f1_score(train_predicted, y_train)))
-print('Test set f1: {}'.format(f1_score(test_predicted, y_test)))
+rnn_lstm.model.data_utils import assess
+predicted = lstm.predict(X_test)
+scores = assess(predicted, y_test)
+print(scores["f1"])
 ```
 
