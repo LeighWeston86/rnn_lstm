@@ -3,6 +3,9 @@ import tensorflow as tf
 import numpy as np
 
 class TfLSTM(object):
+    """
+    An LSTM class to perform binary text classification in tensorflow.
+    """
 
     def __init__(self, vocab_size,
                  num_classes,
@@ -11,9 +14,8 @@ class TfLSTM(object):
                  sequence_length=500,
                  embedding_size=32,
                  dropout=0.4):
-
         """
-        An LSTM for text classification.
+        Constructor method for TfLSTM.
 
         :param vocab_size: int; number of words in the vocabulary
         :param num_classes: int; number of label classes

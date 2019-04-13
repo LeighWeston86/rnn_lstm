@@ -5,10 +5,13 @@ from keras.models import Input, Model
 from keras.optimizers import Adam
 
 class KerasLSTM(object):
+    """
+    An LSTM class to perform binary text classification in keras.
+    """
 
     def __init__(self, sequence_length=500, embedding_dim=32, vocab_size=5000, lstm_size=100, dropout=0.4):
         """
-        A simple LSTM to perform binary text classification.
+        Constructor method for Keras LSTM.
 
         :param sequence_length: int; maximum length of sequences
         :param embedding_dim: int; dimension of the word embeddings
